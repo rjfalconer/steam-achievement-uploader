@@ -1,32 +1,26 @@
-﻿using ImageMagick;
+using ImageMagick;
 using System.Text.RegularExpressions;
 
-namespace ImageProcessor;
+namespace AchievementUploader.Services;
 
-internal class Program
+public static class ImageProcessorService
 {
-    private static void Main(string[] args)
+    public static int ProcessAchievementImages(string imagesDirectory)
     {
-        Console.WriteLine("Achievement Image Processor - Generating greyscale versions...");
+        Console.WriteLine("Generating greyscale _unachieved versions of achievement images...");
 
-        // Get the achievements folder path - check multiple possible locations
-        string[] possiblePaths = {
-            "data",                          // When running from repository root
-            Path.Combine("..", "..", "..", "..", "data") // When running from bin/Debug/net8.0
-        };
-        var achievementsPath = possiblePaths.FirstOrDefault(path => Directory.Exists(path));
-        if (achievementsPath == null)
+        if (!Directory.Exists(imagesDirectory))
         {
-            Console.WriteLine("Error: Achievements folder not found. Please ensure you're running from the repository root or ImageProcessor folder.");
-            return;
+            Console.WriteLine($"Error: Images directory not found: {imagesDirectory}");
+            return 0;
         }
 
-        Console.WriteLine($"Using achievements folder: {Path.GetFullPath(achievementsPath)}");
+        Console.WriteLine($"Using images directory: {Path.GetFullPath(imagesDirectory)}");
 
-        // Pattern to match any JPG file except those with _unachieved suffix
+        // Any JPG file except those with _unachieved suffix
         var jpgPattern = new Regex(@"^.*\.jpg$", RegexOptions.IgnoreCase);
 
-        var jpgFiles = Directory.GetFiles(achievementsPath, "*.jpg")
+        var jpgFiles = Directory.GetFiles(imagesDirectory, "*.jpg")
             .Where(file => jpgPattern.IsMatch(Path.GetFileName(file)))
             .Where(file => !Path.GetFileName(file).Contains("_unachieved", StringComparison.OrdinalIgnoreCase))
             .ToList();
@@ -34,7 +28,7 @@ internal class Program
         if (jpgFiles.Count == 0)
         {
             Console.WriteLine("No JPG files found to process.");
-            return;
+            return 0;
         }
 
         Console.WriteLine($"Found {jpgFiles.Count} achievement images to process:");
@@ -45,9 +39,8 @@ internal class Program
         foreach (string inputPath in jpgFiles)
         {
             string fileName = Path.GetFileNameWithoutExtension(inputPath);
-            string outputPath = Path.Combine(achievementsPath, $"{fileName}_unachieved.jpg");
+            string outputPath = Path.Combine(imagesDirectory, $"{fileName}_unachieved.jpg");
 
-            // Check if greyscale version already exists
             if (File.Exists(outputPath))
             {
                 Console.WriteLine($"  Skipping {Path.GetFileName(inputPath)} - greyscale version already exists");
@@ -73,8 +66,7 @@ internal class Program
             }
         }
 
-        Console.WriteLine("\nProcessing complete!");
-        Console.WriteLine($"  Processed: {processedCount} images");
-        Console.WriteLine($"  Skipped: {skippedCount} images (already exist)");
+        Console.WriteLine($"\nImage processing complete! Processed: {processedCount} images, Skipped: {skippedCount} images");
+        return processedCount;
     }
 }
