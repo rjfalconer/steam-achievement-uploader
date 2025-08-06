@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <!--
+      Redirect all final outputs into: <solution-folder>\bin\<project>\<configuration>\
+      and all intermediate files into: <solution-folder>\obj\<project>\<configuration>\
+      -->
+    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>
