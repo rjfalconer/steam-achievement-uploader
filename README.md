@@ -1,8 +1,14 @@
 # Steam Achievement Uploader
 
-A C# solution containing tools for Steam app developers to automate achievement configuration.
+## The problem
+In order to configure Achievements for their Steam games, developers need to interact with the below UI on the Steam Partner page:<br>
 
-![](doc/partner-screenshot.jpg)
+![](doc/partner-screenshot.jpg)<br>
+*Screenshot from https://partner.steamgames.com/apps/achievements/*
+
+Achievements need to be entered manually, one at a time, requiring several clicks per achievement. For games with a large number of achievements, this is a tedious process. Additionally, the "Unachieved" icon for a game is nearly always implemented as a desaturated version of the "Achieved" icon, and yet both must be uploaded.
+
+This repo presents a C# solution containing tools for Steam app developers to automate their achievement configuration.
 
 ## Projects
 
@@ -22,9 +28,12 @@ A standalone utility that generates greyscale (desaturated) versions of achievem
 
 For most users, the `AchievementUploader` tool with the `--generate-images` option provides a complete solution:
 
+1. Visit [Steamworks](https://partner.steamgames.com/apps/achievements/) and sign in. 
+1. Open your browser dev tools (probably F12) and look for "Storage" or "Cookies"
+1. Make a note of the values of `sessionid` and `steamLoginSecure`. The app will use these values to authenticate as you.
 1. Navigate to the `AchievementUploader` directory
-2. Build the project: `dotnet build`
-3. Run with your data: 
+1. Build the project: `dotnet build`
+1. Run with your data: 
    ```bash
    dotnet run -- --csv achievements.csv --images ./achievements --session-id <your-session> --steam-login-secure <your-login> --app-id <your-app-id> --generate-images
    ```
@@ -41,4 +50,3 @@ The repository includes sample data to demonstrate the expected format:
 
 - .NET 8.0 or later
 - Valid Steam Partner account with app access
-- Steam session cookies from partner.steamgames.com

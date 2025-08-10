@@ -8,7 +8,6 @@ A C# command-line tool that automates the process of defining achievements for S
 
 - .NET 8.0 or later
 - Valid Steam Partner account with access to the app
-- Steam session cookies (sessionid, steamLoginSecure)
 
 ## Installation
 
