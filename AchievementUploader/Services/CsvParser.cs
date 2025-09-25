@@ -14,7 +14,7 @@ public class CsvParser
         using var reader = new StringReader(content);
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            HasHeaderRecord = false,
+            HasHeaderRecord = true,
             BadDataFound = null, // Ignore bad data
             MissingFieldFound = null, // Ignore missing fields
         };
