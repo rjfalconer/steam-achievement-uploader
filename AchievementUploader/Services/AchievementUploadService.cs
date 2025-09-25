@@ -17,14 +17,12 @@ public class AchievementUploadService
 
     public async Task<bool> ProcessAchievementsAsync(List<Achievement> achievements)
     {
-        Console.WriteLine($"Processing {achievements.Count} achievements...");
+        var existing = await _steamClient.FetchAchievementsAsync();
+
+        Console.WriteLine($"Processing {achievements.Count} over existing {existing.Count} achievements...");
         
-        for (int i = 0; i < achievements.Count; i++)
+        foreach(var achievement in achievements)
         {
-            var achievement = achievements[i];
-            int statId = i + 1;
-            string bitId = "0"; // Unclear what this is
-            
             Console.WriteLine($"\nProcessing achievement: {achievement.Id} - {achievement.DisplayName}");
             
             achievement.IconPath = Path.Combine(_imagesFolder, $"{achievement.Id}.jpg");
@@ -33,16 +31,24 @@ public class AchievementUploadService
             try
             {
                 // Check if achievement already exists
-                var existingAchievement = await _steamClient.FetchAchievementAsync(statId, bitId);
-                bool isUpdate = existingAchievement != null;
-
-                if (isUpdate)
+                int statId, bitId;
+                if (existing.TryGetValue(achievement.Id, out var existingAchievement))
                 {
                     Console.WriteLine("  Achievement exists, updating...");
+                    statId = existingAchievement.StatId;
+                    bitId = existingAchievement.BitId ?? 0;
                 }
                 else
                 {
                     Console.WriteLine("  Creating new achievement...");
+                    (statId, bitId, _) = await _steamClient.CreateNewAchievementAsync();
+                }
+
+                // Save achievement data
+                var saveResult = await _steamClient.SaveAchievementAsync(achievement, statId, bitId, _permission);
+                if (!saveResult)
+                {
+                    Console.WriteLine($"  Failed to save achievement: {achievement.DisplayName}");
                 }
 
                 if (File.Exists(achievement.IconPath))
@@ -77,17 +83,6 @@ public class AchievementUploadService
                 else
                 {
                     Console.WriteLine($"Warning: Unachieved icon not found: {achievement.UnachievedIconPath}");
-                }
-
-                // Save achievement data
-                var saveResult = await _steamClient.SaveAchievementAsync(achievement, statId, bitId, _permission);
-                if (saveResult)
-                {
-                    Console.WriteLine($"  Successfully {(isUpdate ? "updated" : "created")}.");
-                }
-                else
-                {
-                    Console.WriteLine($"  Failed to save achievement: {achievement.DisplayName}");
                 }
 
                 // Add delay between requests to be respectful to the API

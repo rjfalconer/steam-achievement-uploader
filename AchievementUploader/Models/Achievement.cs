@@ -13,6 +13,10 @@ public class Achievement
     public bool Hidden { get; set; }
     public string? IconPath { get; set; }
     public string? UnachievedIconPath { get; set; }
+
+    public string? LinkedStat { get; set; }
+    public int MinStatValue { get; set; } = 0;
+    public int MaxStatValue { get; set; } = 1;
 }
 
 public class SteamAchievementResponse
