@@ -30,19 +30,6 @@ public class AchievementUploadService
             achievement.IconPath = Path.Combine(_imagesFolder, $"{achievement.Id}.jpg");
             achievement.UnachievedIconPath = Path.Combine(_imagesFolder, $"{achievement.Id}_unachieved.jpg");
 
-            // Validate image files exist
-            if (!File.Exists(achievement.IconPath))
-            {
-                Console.WriteLine($"Warning: Achievement icon not found: {achievement.IconPath}");
-                continue;
-            }
-
-            if (!File.Exists(achievement.UnachievedIconPath))
-            {
-                Console.WriteLine($"Warning: Unachieved icon not found: {achievement.UnachievedIconPath}");
-                continue;
-            }
-
             try
             {
                 // Check if achievement already exists
@@ -58,23 +45,39 @@ public class AchievementUploadService
                     Console.WriteLine("  Creating new achievement...");
                 }
 
-                // Upload achieved icon
-                var achievedUpload = await _steamClient.UploadImageAsync(achievement.IconPath, statId, bitId, false);
-                if (!achievedUpload.Success)
+                if (File.Exists(achievement.IconPath))
                 {
-                    Console.WriteLine($"  Error uploading achieved icon: {achievedUpload.Error}");
-                    continue;
-                }
-                await Task.Delay(1000); // Seems images fail to upload if done too quickly, but still return success
+                    // Upload achieved icon
+                    var achievedUpload = await _steamClient.UploadImageAsync(achievement.IconPath, statId, bitId, false);
+                    if (!achievedUpload.Success)
+                    {
+                        Console.WriteLine($"  Error uploading achieved icon: {achievedUpload.Error}");
+                        //continue;
+                    }
 
-                // Upload unachieved icon
-                var unachievedUpload = await _steamClient.UploadImageAsync(achievement.UnachievedIconPath, statId, bitId, true);
-                if (!unachievedUpload.Success)
-                {
-                    Console.WriteLine($"  Error uploading unachieved icon: {unachievedUpload.Error}");
-                    continue;
+                    await Task.Delay(1000); // Seems images fail to upload if done too quickly, but still return success
                 }
-                await Task.Delay(1000); // Seems images fail to upload if done too quickly, but still return success
+                else
+                {
+                    Console.WriteLine($"Warning: Achievement icon not found: {achievement.IconPath}");
+                }
+
+                if (File.Exists(achievement.UnachievedIconPath))
+                {
+                    // Upload unachieved icon
+                    var unachievedUpload = await _steamClient.UploadImageAsync(achievement.UnachievedIconPath, statId, bitId, true);
+                    if (!unachievedUpload.Success)
+                    {
+                        Console.WriteLine($"  Error uploading unachieved icon: {unachievedUpload.Error}");
+                        //continue;
+                    }
+
+                    await Task.Delay(1000); // Seems images fail to upload if done too quickly, but still return success
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: Unachieved icon not found: {achievement.UnachievedIconPath}");
+                }
 
                 // Save achievement data
                 var saveResult = await _steamClient.SaveAchievementAsync(achievement, statId, bitId, _permission);

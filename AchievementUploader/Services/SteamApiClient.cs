@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AchievementUploader.Models;
 
 namespace AchievementUploader.Services;
@@ -47,8 +49,10 @@ public class SteamApiClient : IDisposable
 
         var options = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
+        options.AddNullFalseSupport();
 
         var result = JsonSerializer.Deserialize<AchievementDetails>(jsonString, options);
         return result;
@@ -87,11 +91,16 @@ public class SteamApiClient : IDisposable
         var jsonString = await response.Content.ReadAsStringAsync();
         var options = new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
+        options.AddNullFalseSupport();
 
         var result = JsonSerializer.Deserialize<SteamAchievementResponse>(jsonString, options);
-        return result?.Success == 1 && result?.Saved == true;
+        if(result is { Success: 1, Saved: true }) return true;
+
+        Console.WriteLine(jsonString);
+        return false;
     }
 
     public async Task<ImageUploadResponse> UploadImageAsync(string imagePath, int statId, string bitId, bool isUnachieved = false)
