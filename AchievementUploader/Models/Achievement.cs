@@ -1,3 +1,6 @@
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace AchievementUploader.Models;
@@ -10,6 +13,10 @@ public class Achievement
     public bool Hidden { get; set; }
     public string? IconPath { get; set; }
     public string? UnachievedIconPath { get; set; }
+
+    public string? LinkedStat { get; set; }
+    public int MinStatValue { get; set; } = 0;
+    public int MaxStatValue { get; set; } = 1;
 }
 
 public class SteamAchievementResponse
@@ -24,7 +31,7 @@ public class AchievementDetails
     [JsonPropertyName("stat_id")]
     public int StatId { get; set; }
     [JsonPropertyName("bit_id")]
-    public dynamic? BitId { get; set; } // Sometimes string, sometimes int
+    public int? BitId { get; set; } // Sometimes string, sometimes int
     [JsonPropertyName("api_name")]
     public string ApiName { get; set; } = string.Empty;
     [JsonPropertyName("display_name")]
@@ -32,7 +39,7 @@ public class AchievementDetails
     [JsonPropertyName("description")]
     public DescriptionObject Description { get; set; } = new();
     [JsonPropertyName("permission")]
-    public string Permission { get; set; }
+    public int Permission { get; set; }
     [JsonPropertyName("hidden")]
     public string Hidden { get; set; } = "0";
     [JsonPropertyName("icon")]
@@ -40,7 +47,25 @@ public class AchievementDetails
     [JsonPropertyName("icon_gray")]
     public string IconGrey { get; set; } = string.Empty;
     [JsonPropertyName("progress")]
-    public bool Progress { get; set; }
+    public NullAsFalse<ProgressDetails> ProgressDetails { get; set; }
+}
+
+public class ProgressDetails
+{
+    [JsonPropertyName("min_val")]
+    public int MinVal { get; set; }
+    [JsonPropertyName("max_val")]
+    public int MaxVal { get; set; }
+    [JsonPropertyName("value")]
+    public ProgressDetailsStat Stat { get; set; } = new();
+}
+
+public class ProgressDetailsStat
+{
+    [JsonPropertyName("operation")]
+    public string Operation { get; set; } = "statvalue";
+    [JsonPropertyName("operand1")]
+    public string Stat { get; set; }
 }
 
 public class DisplayNameObject
