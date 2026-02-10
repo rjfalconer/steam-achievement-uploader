@@ -15,11 +15,11 @@ internal class Program
             IsRequired = true
         };
 
-        var imagesDirectoryOption = new Option<string>(
+        var imagesDirectoryOption = new Option<string?>(
             name: "--images",
             description: "Path to the directory containing achievement images")
         {
-            IsRequired = true
+            IsRequired = false
         };
 
         var sessionIdOption = new Option<string>(
@@ -77,7 +77,7 @@ internal class Program
         return await rootCommand.InvokeAsync(args);
     }
 
-    private static async Task ProcessAchievements(string csvFile, string imagesDirectory, string sessionId, string steamLoginSecure, string appId, bool generateImages, int permission)
+    private static async Task ProcessAchievements(string csvFile, string? imagesDirectory, string sessionId, string steamLoginSecure, string appId, bool generateImages, int permission)
     {
         try
         {
@@ -93,7 +93,7 @@ internal class Program
                 return;
             }
 
-            if (!Directory.Exists(imagesDirectory))
+            if (generateImages && !Directory.Exists(imagesDirectory))
             {
                 Console.WriteLine($"Error: Images not found: \n\"{imagesDirectory}\", relative to current directory \n\"{Environment.CurrentDirectory}\"");
                 Console.WriteLine("Press any key to continue...");
