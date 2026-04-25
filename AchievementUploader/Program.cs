@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.CommandLine.Parsing;
 using AchievementUploader.Models;
 using AchievementUploader.Services;
 
@@ -8,46 +9,45 @@ internal class Program
 {
     private static async Task<int> Main(string[] args)
     {
-        var csvFileOption = new Option<string>(
-            "--csv",
-            "Path to the CSV file containing achievement data")
+        var csvFileOption = new Option<string>("--csv")
         {
-            IsRequired = true
+            Description = "Path to the CSV file containing achievement data",
+            Required = true
         };
 
-        var imagesDirectoryOption = new Option<string?>(
-            "--images",
-            "Path to the directory containing achievement images");
-
-        var sessionIdOption = new Option<string>(
-            "--session-id",
-            "Steam session ID")
+        var imagesDirectoryOption = new Option<string?>("--images")
         {
-            IsRequired = true
+            Description = "Path to the directory containing achievement images",
         };
 
-        var steamLoginSecureOption = new Option<string>(
-            "--steam-login-secure",
-            "Steam login secure cookie value")
+        var sessionIdOption = new Option<string>("--session-id")
         {
-            IsRequired = true
+            Description = "Steam session ID",
+            Required = true
         };
 
-        var appIdOption = new Option<string>(
-            "--app-id",
-            "Steam App ID")
+        var steamLoginSecureOption = new Option<string>("--steam-login-secure")
         {
-            IsRequired = true
+            Description = "Steam login secure cookie value",
+            Required = true
         };
 
-        var generateImagesOption = new Option<bool>(
-            "--generate-images",
-            "Generate greyscale _unachieved versions of achievement images before uploading");
+        var appIdOption = new Option<string>("--app-id")
+        {
+            Description = "Steam App ID",
+            Required = true
+        };
 
-        var permissionOption = new Option<int>(
-            "--permission",
-            () => 0,
-            "Permission level for achievements (0 = Client, 1 = GameServer, 2 = Official Game Server)");
+        var generateImagesOption = new Option<bool>("--generate-images")
+        {
+            Description = "Generate greyscale _unachieved versions of achievement images before uploading",
+        };
+
+        var permissionOption = new Option<int>("--permission")
+        {
+            Description = "Permission level for achievements (0 = Client, 1 = GameServer, 2 = Official Game Server)",
+            DefaultValueFactory = _ => 0
+        };
 
         var rootCommand = new RootCommand("Steam Achievement Uploader - Automate the process of defining Steam achievements")
         {
@@ -60,9 +60,23 @@ internal class Program
             permissionOption
         };
 
-        rootCommand.SetHandler<string, string?, string, string, string, bool, int>(ProcessAchievements, csvFileOption, imagesDirectoryOption, sessionIdOption, steamLoginSecureOption, appIdOption, generateImagesOption, permissionOption);
+        rootCommand.SetAction(p => ProcessAchievements(
+            p.GetRequiredValue(csvFileOption),
+            p.GetValue(imagesDirectoryOption),
+            p.GetRequiredValue(sessionIdOption),
+            p.GetRequiredValue(steamLoginSecureOption),
+            p.GetRequiredValue(appIdOption),
+            p.GetValue(generateImagesOption),
+            p.GetValue(permissionOption))
+        );
 
-        return await rootCommand.InvokeAsync(args);
+        var parseResult = rootCommand.Parse(args);
+        foreach (var error in parseResult.Errors)
+        {
+            await Console.Error.WriteLineAsync(error.Message);
+        }
+
+        return await parseResult.InvokeAsync();
     }
 
     private static async Task ProcessAchievements(string csv, string? images, string sessionId, string steamLoginSecure, string appId, bool generateImages, int permission)
