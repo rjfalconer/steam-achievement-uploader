@@ -1,4 +1,4 @@
-﻿using System.CommandLine;
+using System.CommandLine;
 using AchievementUploader.Models;
 using AchievementUploader.Services;
 
@@ -9,54 +9,37 @@ internal class Program
     private static async Task<int> Main(string[] args)
     {
         var csvFileOption = new Option<string>(
-            name: "--csv",
-            description: "Path to the CSV file containing achievement data")
-        {
-            IsRequired = true
-        };
+            "--csv",
+            "Path to the CSV file containing achievement data");
+        csvFileOption.IsRequired = true;
 
         var imagesDirectoryOption = new Option<string?>(
-            name: "--images",
-            description: "Path to the directory containing achievement images")
-        {
-            IsRequired = false
-        };
+            "--images",
+            "Path to the directory containing achievement images");
 
         var sessionIdOption = new Option<string>(
-            name: "--session-id",
-            description: "Steam session ID")
-        {
-            IsRequired = true
-        };
+            "--session-id",
+            "Steam session ID");
+        sessionIdOption.IsRequired = true;
 
         var steamLoginSecureOption = new Option<string>(
-            name: "--steam-login-secure",
-            description: "Steam login secure cookie value")
-        {
-            IsRequired = true
-        };
+            "--steam-login-secure",
+            "Steam login secure cookie value");
+        steamLoginSecureOption.IsRequired = true;
 
         var appIdOption = new Option<string>(
-            name: "--app-id",
-            description: "Steam App ID")
-        {
-            IsRequired = true
-        };
+            "--app-id",
+            "Steam App ID");
+        appIdOption.IsRequired = true;
 
         var generateImagesOption = new Option<bool>(
-            name: "--generate-images",
-            description: "Generate greyscale _unachieved versions of achievement images before uploading")
-        {
-            IsRequired = false
-        };
+            "--generate-images",
+            "Generate greyscale _unachieved versions of achievement images before uploading");
 
         var permissionOption = new Option<int>(
-            name: "--permission",
-            description: "Permission level for achievements (0 = Client, 1 = GameServer, 2 = Official Game Server)")
-        {
-            IsRequired = false
-        };
-        permissionOption.SetDefaultValue(0);
+            "--permission",
+            () => 0,
+            "Permission level for achievements (0 = Client, 1 = GameServer, 2 = Official Game Server)");
 
         var rootCommand = new RootCommand("Steam Achievement Uploader - Automate the process of defining Steam achievements")
         {
@@ -69,15 +52,12 @@ internal class Program
             permissionOption
         };
 
-        rootCommand.SetHandler(async (csvFile, imagesDirectory, sessionId, steamLoginSecure, appId, generateImages, permission) =>
-        {
-            await ProcessAchievements(csvFile, imagesDirectory, sessionId, steamLoginSecure, appId, generateImages, permission);
-        }, csvFileOption, imagesDirectoryOption, sessionIdOption, steamLoginSecureOption, appIdOption, generateImagesOption, permissionOption);
+        rootCommand.SetHandler<string, string?, string, string, string, bool, int>(ProcessAchievements, csvFileOption, imagesDirectoryOption, sessionIdOption, steamLoginSecureOption, appIdOption, generateImagesOption, permissionOption);
 
         return await rootCommand.InvokeAsync(args);
     }
 
-    private static async Task ProcessAchievements(string csvFile, string? imagesDirectory, string sessionId, string steamLoginSecure, string appId, bool generateImages, int permission)
+    private static async Task ProcessAchievements(string csv, string? images, string sessionId, string steamLoginSecure, string appId, bool generateImages, int permission)
     {
         try
         {
@@ -85,31 +65,31 @@ internal class Program
             Console.WriteLine("==========================");
             Console.WriteLine();
 
-            if (!File.Exists(csvFile))
+            if (!File.Exists(csv))
             {
-                Console.WriteLine($"Error: CSV file not found: \n\"{csvFile}\", relative to current directory: \n\"{Environment.CurrentDirectory}\"");
+                Console.WriteLine($"Error: CSV file not found: \n\"{csv}\", relative to current directory: \n\"{Environment.CurrentDirectory}\"");
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
                 return;
             }
 
-            if (generateImages && !Directory.Exists(imagesDirectory))
+            if (generateImages && !Directory.Exists(images))
             {
-                Console.WriteLine($"Error: Images not found: \n\"{imagesDirectory}\", relative to current directory \n\"{Environment.CurrentDirectory}\"");
+                Console.WriteLine($"Error: Images not found: \n\"{images}\", relative to current directory \n\"{Environment.CurrentDirectory}\"");
                 Console.WriteLine("Press any key to continue...");
                 Console.ReadKey();
                 return;
             }
 
             Console.Write("Parsing CSV file... ");
-            var achievements = await CsvParser.ParseAchievementsAsync(csvFile);
+            var achievements = await CsvParser.ParseAchievementsAsync(csv);
             Console.WriteLine($"found {achievements.Count} achievements");
 
             // Generate greyscale images if requested
             if (generateImages)
             {
                 Console.WriteLine();
-                ImageProcessorService.ProcessAchievementImages(imagesDirectory);
+                ImageProcessorService.ProcessAchievementImages(images!);
                 Console.WriteLine();
             }
 
@@ -121,7 +101,7 @@ internal class Program
             };
 
             using var steamClient = new SteamApiClient(session);
-            var uploadService = new AchievementUploadService(steamClient, imagesDirectory, permission);
+            var uploadService = new AchievementUploadService(steamClient, images, permission);
 
             await uploadService.ProcessAchievementsAsync(achievements);
         }
