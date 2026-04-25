@@ -14,7 +14,7 @@ public class CsvParser
         using var reader = new StringReader(content);
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            HasHeaderRecord = false,
+            HasHeaderRecord = true,
             BadDataFound = null, // Ignore bad data
             MissingFieldFound = null, // Ignore missing fields
         };
@@ -39,5 +39,8 @@ public class AchievementMap : ClassMap<Achievement>
                 var value = args.Row.GetField(3) ?? "false";
                 return value.Trim().ToLowerInvariant() == "true" || value.Trim() == "1";
             });
+        Map(m => m.LinkedStat).Index(4).Optional();
+        Map(m => m.MinStatValue).Index(5).Optional().Default(0);
+        Map(m => m.MaxStatValue).Index(6).Optional().Default(0);
     }
 }
