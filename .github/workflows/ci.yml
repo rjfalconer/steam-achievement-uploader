@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Configure git
+      run: git config --global core.autocrlf false
+
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore AchievementUploader.sln
+
+    - name: Build
+      run: dotnet build AchievementUploader.sln --no-restore --configuration Release
+
+    - name: Run linting
+      run: |
+        echo "If this fails run 'dotnet format whitespace AchievementUploader.sln'"
+        dotnet format --verify-no-changes --verbosity diagnostic whitespace AchievementUploader.sln
