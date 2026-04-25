@@ -20,8 +20,8 @@ public class AchievementUploadService
         var existing = await _steamClient.FetchAchievementsAsync();
 
         Console.WriteLine($"Processing {achievements.Count} over existing {existing.Count} achievements...");
-        
-        foreach(var achievement in achievements)
+
+        foreach (var achievement in achievements)
         {
             Console.WriteLine($"\nProcessing achievement: {achievement.Id} - {achievement.DisplayName}");
 

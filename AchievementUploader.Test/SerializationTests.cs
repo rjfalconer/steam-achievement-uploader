@@ -7,8 +7,9 @@ namespace AchievementUploader.Test;
 
 public class SerializationTests
 {
-    record Nested(string Name);
-    record Foo(string Name, NullAsFalse<Nested> Test);
+    private record Nested(string Name);
+
+    private record Foo(string Name, NullAsFalse<Nested> Test);
 
     [Test]
     public void ShouldRoundTripNullAsFalse()

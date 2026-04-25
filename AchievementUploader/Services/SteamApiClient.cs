@@ -30,13 +30,14 @@ public class SteamApiClient : IDisposable
         _httpClient.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "empty");
         _httpClient.DefaultRequestHeaders.Add("Referer", $"https://partner.steamgames.com/apps/achievements/{_session.AppId}");
         _httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br, zstd");
-        
+
         var cookieValue = $"sessionid={_session.SessionId}; steamLoginSecure={Uri.EscapeDataString(_session.SteamLoginSecure)}";
         _httpClient.DefaultRequestHeaders.Add("Cookie", cookieValue);
     }
 
     public record AchievementSummary(int StatId, int BitId, string ApiName);
-    record CreateAchievementResponse(AchievementSummary achievement, int success);
+
+    private record CreateAchievementResponse(AchievementSummary achievement, int success);
     public async Task<AchievementSummary> CreateNewAchievementAsync()
     {
         var url = $"https://partner.steamgames.com/apps/newachievement/{_session.AppId}";
@@ -56,7 +57,7 @@ public class SteamApiClient : IDisposable
         return result.achievement;
     }
 
-    record FetchAchievementsResponse(List<AchievementDetails> achievements);
+    private record FetchAchievementsResponse(List<AchievementDetails> achievements);
 
     public async Task<IDictionary<string, AchievementDetails>> FetchAchievementsAsync()
     {
@@ -85,7 +86,7 @@ public class SteamApiClient : IDisposable
         response.EnsureSuccessStatusCode();
 
         var jsonString = await response.Content.ReadAsStringAsync();
-        
+
         if (string.IsNullOrWhiteSpace(jsonString) || jsonString == "\"achievement not found\"")
         {
             return null;
@@ -105,13 +106,13 @@ public class SteamApiClient : IDisposable
     public async Task<bool> SaveAchievementAsync(Achievement achievement, int statId = 1, int bitId = 0, int permission = 0)
     {
         var url = $"https://partner.steamgames.com/apps/saveachievement/{_session.AppId}";
-        
+
         var displayNameObj = new { english = achievement.DisplayName, token = $"NEW_ACHIEVEMENT_{statId}_{bitId}_NAME" };
         var descriptionObj = new { english = achievement.Description, token = $"NEW_ACHIEVEMENT_{statId}_{bitId}_DESC" };
-        
+
         var displayNameJson = JsonSerializer.Serialize(displayNameObj);
         var descriptionJson = JsonSerializer.Serialize(descriptionObj);
-        
+
         var formData = new List<string>
         {
             $"statid={statId}",
@@ -141,7 +142,7 @@ public class SteamApiClient : IDisposable
         options.AddNullFalseSupport();
 
         var result = JsonSerializer.Deserialize<SteamAchievementResponse>(jsonString, options);
-        if(result is { Success: 1, Saved: true }) return true;
+        if (result is { Success: 1, Saved: true }) return true;
 
         Console.WriteLine(jsonString);
         return false;
@@ -150,9 +151,9 @@ public class SteamApiClient : IDisposable
     public async Task<ImageUploadResponse> UploadImageAsync(string imagePath, int statId, int bitId, bool isUnachieved = false)
     {
         var url = "https://partner.steamgames.com/images/uploadachievement";
-        
+
         using var form = new MultipartFormDataContent();
-        
+
         form.Add(new StringContent(_session.SessionId), "sessionid");
         form.Add(new StringContent(_session.AppId), "appID");
         form.Add(new StringContent(statId.ToString()), "statID");
@@ -166,7 +167,7 @@ public class SteamApiClient : IDisposable
         form.Add(imageContent, "image", Path.GetFileName(imagePath));
 
         var response = await _httpClient.PostAsync(url, form);
-        
+
         if (response.IsSuccessStatusCode)
         {
             return new ImageUploadResponse { Success = true };

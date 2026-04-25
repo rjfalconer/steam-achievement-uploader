@@ -18,10 +18,10 @@ public class CsvParser
             BadDataFound = null, // Ignore bad data
             MissingFieldFound = null, // Ignore missing fields
         };
-        
+
         using var csv = new CsvReader(reader, config);
         csv.Context.RegisterClassMap<AchievementMap>();
-        
+
         return csv.GetRecords<Achievement>().ToList();
     }
 }
@@ -34,7 +34,7 @@ public class AchievementMap : ClassMap<Achievement>
         Map(m => m.DisplayName).Index(1);
         Map(m => m.Description).Index(2);
         Map(m => m.Hidden).Index(3)
-            .Convert(args => 
+            .Convert(args =>
             {
                 var value = args.Row.GetField(3) ?? "false";
                 return value.Trim().ToLowerInvariant() == "true" || value.Trim() == "1";
