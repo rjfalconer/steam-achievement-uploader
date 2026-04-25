@@ -1,4 +1,4 @@
-﻿using System.CommandLine;
+using System.CommandLine;
 using AchievementUploader.Models;
 using AchievementUploader.Services;
 
@@ -54,9 +54,9 @@ internal class Program
             name: "--permission",
             description: "Permission level for achievements (0 = Client, 1 = GameServer, 2 = Official Game Server)")
         {
-            IsRequired = false
+            IsRequired = false,
+            DefaultValue = 0
         };
-        permissionOption.SetDefaultValue(0);
 
         var rootCommand = new RootCommand("Steam Achievement Uploader - Automate the process of defining Steam achievements")
         {
