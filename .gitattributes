@@ -1,4 +1,11 @@
 ###############################################################################
-# Set default behavior to automatically normalise line endings.
+# Set default behaviour to automatically normalise line endings.
 ###############################################################################
 * text=auto
+
+###############################################################################
+# Enforce CRLF line endings for C# files
+###############################################################################
+*.cs text eol=crlf
+*.csproj text eol=crlf
+*.sln text eol=crlf
